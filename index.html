@@ -28,7 +28,7 @@ button:hover{background:#2563eb}
   <div class="msg" id="msg"></div>
 </div>
 <script>
-var P={"574467": "athlete/a67407a0-03be-4cbc-a7d0-64828bb60ac2/", "158856": "athlete/b79af856-d9f8-45b4-b19d-a2f020f47526/", "870148": "athlete/fde09ed3-648d-4189-a7fb-3db31bdef5cc/", "641644": "athlete/0db0bc47-0f47-418e-9a8f-0474ce8a0545/", "1997": "trainer/"};
+var P={"574467": "athlete/a67407a0-03be-4cbc-a7d0-64828bb60ac2/", "158856": "athlete/b79af856-d9f8-45b4-b19d-a2f020f47526/", "870148": "athlete/fde09ed3-648d-4189-a7fb-3db31bdef5cc/", "641644": "athlete/0db0bc47-0f47-418e-9a8f-0474ce8a0545/", "394307": "trainer/"};
 document.getElementById('pin').addEventListener('keydown',function(e){if(e.key==='Enter') check();});
 function check(){var v=document.getElementById('pin').value.trim();var inp=document.getElementById('pin');var msg=document.getElementById('msg');if(P[v]){window.location.href=P[v];}else{inp.classList.remove('error');void inp.offsetWidth;inp.classList.add('error');msg.textContent='Falscher PIN. Bitte erneut versuchen.';inp.value='';}}
 </script>

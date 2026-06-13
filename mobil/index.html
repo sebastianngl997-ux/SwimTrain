@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0F1B2D">
+<title>SwimTrain Pro · Mobil</title>
+<style>
+  :root{
+    --navy-900:#0F1B2D; --navy-800:#16263D; --navy-700:#1F3350;
+    --surface:#FFFFFF; --bg:#F5F7FA; --line:#E4E9F0;
+    --ink:#1A2433; --ink-2:#5A6B82; --ink-3:#8B99AC;
+    --aqua-600:#0E7490; --aqua-500:#0891B2; --aqua-400:#06B6D4; --aqua-50:#ECFEFF;
+    --ok:#16A34A; --warn:#D97706; --err:#DC2626;
+    --bz1:#16A34A; --bz2:#84CC16; --bz3:#EAB308; --bz4:#F97316;
+    --bz5:#EA580C; --bz6:#DC2626; --bz7:#DB2777; --bz8:#9333EA;
+    --mono:'SF Mono','JetBrains Mono','Cascadia Code',Consolas,monospace;
+    --r:12px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    font:15px/1.5 -apple-system,'Segoe UI',Inter,system-ui,sans-serif;
+    background:var(--bg);color:var(--ink);
+    display:flex;flex-direction:column;height:100dvh;overflow:hidden;
+  }
+  /* ── Header ── */
+  header{
+    background:var(--navy-900);color:#fff;flex:0 0 auto;
+    padding:calc(env(safe-area-inset-top) + 10px) 16px 10px;
+    display:flex;align-items:center;gap:10px;
+  }
+  header .mark{width:30px;height:30px;border-radius:8px;flex:0 0 30px;
+    background:linear-gradient(135deg,var(--aqua-600),var(--aqua-400));
+    display:grid;place-items:center}
+  header h1{font-size:16px;font-weight:700;letter-spacing:.2px;flex:1}
+  header .hbtn{background:var(--navy-700);border:1px solid #2C4366;color:#C7D2E0;
+    border-radius:8px;padding:7px 11px;font-size:13px;font-weight:600;cursor:pointer}
+  header .hbtn:active{background:var(--navy-800)}
+
+  /* ── Tabs ── */
+  .tabs{flex:0 0 auto;display:flex;background:var(--surface);border-bottom:1px solid var(--line)}
+  .tabs button{flex:1;border:0;background:none;padding:11px 4px;font-size:13.5px;font-weight:600;
+    color:var(--ink-3);border-bottom:2px solid transparent;cursor:pointer}
+  .tabs button.on{color:var(--aqua-600);border-bottom-color:var(--aqua-600)}
+
+  /* ── Scroll area ── */
+  main{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .view{display:none;padding:14px 14px calc(env(safe-area-inset-bottom) + 90px)}
+  .view.on{display:block}
+
+  /* ── Editor ── */
+  .field-name{width:100%;border:1px solid var(--line);border-radius:10px;
+    padding:12px 14px;font-size:17px;font-weight:700;margin-bottom:10px;background:#fff;color:var(--ink)}
+  .field-name:focus{outline:none;border-color:var(--aqua-500)}
+  .row-meta{display:flex;gap:8px;margin-bottom:10px}
+  .row-meta select,.row-meta input{flex:1;border:1px solid var(--line);border-radius:10px;
+    padding:10px 12px;font-size:14px;background:#fff;color:var(--ink);min-width:0}
+  textarea#src{width:100%;min-height:230px;border:1px solid var(--line);border-radius:10px;
+    padding:14px;font-family:var(--mono);font-size:15px;line-height:1.85;
+    background:var(--navy-900);color:#D6E4F0;resize:vertical;tab-size:2}
+  textarea#src:focus{outline:none;border-color:var(--aqua-500)}
+  .hint{font-size:12px;color:var(--ink-3);margin:8px 2px 0;line-height:1.5}
+  .hint code{background:#E7EDF3;color:var(--aqua-600);padding:1px 5px;border-radius:4px;font-family:var(--mono);font-size:11.5px}
+
+  /* ── Summary bar (sticky bottom) ── */
+  .sumbar{position:fixed;left:0;right:0;bottom:0;z-index:20;
+    background:var(--navy-900);color:#fff;
+    padding:10px 14px calc(env(safe-area-inset-bottom) + 10px);
+    display:flex;align-items:center;gap:14px;box-shadow:0 -2px 12px rgba(0,0,0,.2)}
+  .sumbar .stat{display:flex;flex-direction:column;line-height:1.15}
+  .sumbar .stat small{font-size:10px;color:#8FA1B8;text-transform:uppercase;letter-spacing:.05em}
+  .sumbar .stat b{font-size:17px;font-family:var(--mono);font-weight:700}
+  .sumbar .zbar{flex:1;display:flex;height:8px;border-radius:4px;overflow:hidden;background:#2C4366;min-width:40px}
+
+  /* ── Preview ── */
+  .pv-card{background:#fff;border:1px solid var(--line);border-radius:var(--r);
+    box-shadow:0 1px 3px rgba(15,27,45,.06);overflow:hidden;margin-bottom:12px}
+  .pv-head{padding:13px 15px;border-bottom:1px solid var(--line)}
+  .pv-head h2{font-size:18px;font-weight:700}
+  .pv-head .meta{font-size:13px;color:var(--ink-2);margin-top:3px}
+  .pv-serie{margin:0}
+  .pv-serie>.sh{display:flex;align-items:center;gap:8px;background:var(--aqua-50);
+    padding:8px 15px;font-size:13px;font-weight:700;color:var(--aqua-600);
+    border-bottom:1px solid var(--line)}
+  .pv-serie>.sh .reps{font-family:var(--mono)}
+  .pv-line{display:flex;align-items:center;gap:10px;padding:9px 15px;border-bottom:1px solid #F0F3F7}
+  .pv-line:last-child{border-bottom:0}
+  .pv-line.in-serie{padding-left:26px}
+  .pv-amt{font-family:var(--mono);font-weight:700;font-size:14px;color:var(--ink);min-width:62px}
+  .pv-desc{flex:1;font-size:13.5px;color:var(--ink-2)}
+  .pv-desc .cmt{display:block;font-size:12px;color:var(--ink-3);font-style:italic}
+  .pv-z{font-size:10.5px;font-weight:800;color:#fff;padding:2px 7px;border-radius:5px;white-space:nowrap}
+  .pv-time{font-family:var(--mono);font-size:12.5px;color:var(--ink-3);min-width:42px;text-align:right}
+  .pv-empty{padding:40px 20px;text-align:center;color:var(--ink-3);font-size:14px}
+  .pv-err{margin:0 0 12px;background:#FEF2F2;border:1px solid #FECaca;border-left:4px solid var(--err);
+    border-radius:8px;padding:10px 14px;font-size:13px;color:#991B1B}
+  .pv-err b{font-family:var(--mono)}
+  .pv-stats{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:14px 15px}
+  .pv-stats h3{font-size:13px;color:var(--ink-2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em}
+  .zrow{display:flex;align-items:center;gap:10px;margin-bottom:7px;font-size:13px}
+  .zrow .dot{width:12px;height:12px;border-radius:3px;flex:0 0 12px}
+  .zrow .lbl{flex:1}
+  .zrow .val{font-family:var(--mono);color:var(--ink-2)}
+
+  /* ── Action buttons ── */
+  .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+  .btn{flex:1;min-width:130px;border:1px solid var(--line);background:#fff;color:var(--ink);
+    border-radius:10px;padding:13px;font-size:14px;font-weight:600;cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;gap:7px}
+  .btn:active{background:#F0F3F7}
+  .btn.pri{background:var(--aqua-600);border-color:var(--aqua-600);color:#fff}
+  .btn.pri:active{background:var(--aqua-500)}
+  .btn svg{width:17px;height:17px}
+
+  /* ── Saved list ── */
+  .saved-item{background:#fff;border:1px solid var(--line);border-radius:var(--r);
+    padding:13px 15px;margin-bottom:10px;display:flex;align-items:center;gap:12px;
+    box-shadow:0 1px 3px rgba(15,27,45,.05)}
+  .saved-item .info{flex:1;min-width:0}
+  .saved-item .info b{font-size:15px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .saved-item .info small{font-size:12px;color:var(--ink-3)}
+  .saved-item .del{background:none;border:0;color:var(--err);font-size:20px;padding:4px 8px;cursor:pointer}
+  .saved-empty{text-align:center;color:var(--ink-3);padding:50px 20px;font-size:14px}
+
+  /* ── Help ── */
+  .help-card{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:12px}
+  .help-card h3{font-size:15px;margin-bottom:10px;color:var(--aqua-600)}
+  .help-card p{font-size:13.5px;color:var(--ink-2);margin-bottom:8px}
+  .help-card pre{background:var(--navy-900);color:#D6E4F0;border-radius:8px;padding:12px 14px;
+    font-family:var(--mono);font-size:13px;line-height:1.8;overflow-x:auto;white-space:pre;margin:8px 0}
+  .help-card .c{color:#5EEAD4}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13px;margin-top:8px}
+  .kv code{font-family:var(--mono);color:var(--aqua-600);font-size:12.5px}
+  .toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);
+    background:var(--navy-900);color:#fff;padding:11px 18px;border-radius:10px;font-size:13.5px;font-weight:600;
+    opacity:0;pointer-events:none;transition:.25s;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,.3)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* ── KI-Assistent ── */
+  .ai-card{background:linear-gradient(135deg,#0E7490,#0891B2);border-radius:var(--r);padding:12px;
+    margin-bottom:12px;color:#fff;box-shadow:0 2px 12px rgba(14,116,144,.28)}
+  .ai-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+  .ai-title{display:flex;align-items:center;gap:7px;font-weight:700;font-size:14.5px}
+  .ai-title svg{width:18px;height:18px}
+  .ai-gear{background:rgba(255,255,255,.18);border:0;color:#fff;width:32px;height:32px;border-radius:8px;
+    display:grid;place-items:center;cursor:pointer}
+  .ai-gear svg{width:18px;height:18px}
+  #ai-input{width:100%;border:0;border-radius:10px;padding:11px;font-size:14px;font-family:inherit;
+    min-height:74px;resize:vertical;color:var(--ink);background:rgba(255,255,255,.97)}
+  #ai-input:focus{outline:2px solid rgba(255,255,255,.75)}
+  .ai-actions{display:flex;gap:8px;margin-top:9px}
+  .ai-mic,.ai-convert{border:0;border-radius:10px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;gap:7px}
+  .ai-mic{background:rgba(255,255,255,.18);color:#fff;flex:0 0 auto}
+  .ai-mic svg{width:18px;height:18px}
+  .ai-mic.on{background:#DC2626;animation:pulse 1.2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
+  .ai-convert{background:#fff;color:var(--aqua-600);flex:1}
+  .ai-status{font-size:12px;margin-top:8px;min-height:16px;color:rgba(255,255,255,.96)}
+  .ai-status.busy::after{content:'';display:inline-block;width:11px;height:11px;
+    border:2px solid rgba(255,255,255,.5);border-top-color:#fff;border-radius:50%;
+    margin-left:7px;vertical-align:-2px;animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .manual-label{font-size:12px;color:var(--ink-3);margin:0 2px 6px;font-weight:600}
+
+  .settings-overlay{position:fixed;inset:0;background:rgba(15,27,45,.55);display:none;
+    align-items:center;justify-content:center;padding:20px;z-index:60}
+  .settings-overlay.show{display:flex}
+  .settings-box{background:#fff;border-radius:14px;padding:20px;max-width:380px;width:100%}
+  .settings-box h2{font-size:17px;margin-bottom:8px}
+  .settings-box p{font-size:13px;color:var(--ink-2);margin-bottom:10px;line-height:1.45}
+  .settings-box input{width:100%;border:1px solid var(--line);border-radius:9px;padding:11px;
+    font-size:14px;font-family:var(--mono)}
+  .settings-hint{font-size:12px!important;color:var(--ink-3)!important;margin-top:8px!important}
+  .settings-hint a{color:var(--aqua-600)}
+  .settings-actions{display:flex;gap:8px;margin-top:14px}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="mark"><svg width="18" height="18" viewBox="0 0 20 20"><path d="M2 10c2-3 4-3 6 0s4 3 6 0 3-2.5 4-1" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span>
+  <h1>SwimTrain Pro</h1>
+  <button class="hbtn" id="btn-new">+ Neu</button>
+</header>
+
+<nav class="tabs">
+  <button data-v="edit" class="on">Schreiben</button>
+  <button data-v="prev">Vorschau</button>
+  <button data-v="saved">Gespeichert</button>
+  <button data-v="help">Hilfe</button>
+</nav>
+
+<main>
+  <!-- ════ EDITOR ════ -->
+  <section class="view on" id="v-edit">
+    <input class="field-name" id="f-name" placeholder="Name des Trainings" value="Neues Training">
+    <div class="row-meta">
+      <input id="f-date" type="date">
+      <select id="f-pool">
+        <option value="25m">25 m Bahn</option>
+        <option value="50m">50 m Bahn</option>
+      </select>
+    </div>
+
+    <div class="ai-card">
+      <div class="ai-head">
+        <span class="ai-title">
+          <svg viewBox="0 0 20 20" fill="none"><path d="M10 2l1.6 4.4L16 8l-4.4 1.6L10 14l-1.6-4.4L4 8l4.4-1.6z" fill="currentColor"/><circle cx="15.7" cy="14.7" r="1.5" fill="currentColor"/></svg>
+          KI-Assistent
+        </span>
+        <button class="ai-gear" id="ai-settings-btn" aria-label="KI-Einstellungen">
+          <svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="2.4" stroke="currentColor" stroke-width="1.6"/><path d="M10 1.9v2.1M10 16v2.1M18.1 10H16M4 10H1.9M15.7 4.3l-1.5 1.5M5.8 14.2l-1.5 1.5M15.7 15.7l-1.5-1.5M5.8 5.8L4.3 4.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <textarea id="ai-input" placeholder="Beschreibe dein Training in eigenen Worten – oder tippe das Mikrofon und diktiere. Z.B.: „400 locker einschwimmen, dann 4 mal 100 Lagen mit 15 Sekunden Pause, dann 8 mal 50 Kraul auf 50…“"></textarea>
+      <div class="ai-actions">
+        <button class="ai-mic" id="ai-mic">
+          <svg viewBox="0 0 20 20" fill="none"><rect x="7.5" y="2.5" width="5" height="9" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M5 9.5a5 5 0 0 0 10 0M10 14.5v3M7 17.5h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <span id="ai-mic-label">Diktieren</span>
+        </button>
+        <button class="ai-convert" id="ai-convert">In Plan umwandeln</button>
+      </div>
+      <div class="ai-status" id="ai-status"></div>
+    </div>
+    <div class="manual-label">oder manuell schreiben:</div>
+
+    <textarea id="src" spellcheck="false" placeholder="400 ek bz1
+4x100 lagen bz2 p:15
+
+2x{
+  4x100 kr bz5 ab 1:40 &quot;negativ split&quot;
+  200 locker bz1 sp:60
+}
+
+8x25 sprint bz7 p:30
+200 ausschwimmen bz1"></textarea>
+    <div class="hint">
+      <b>Pro Zeile eine Aufgabe.</b> Format:
+      <code>4x100 kr bz5 ab 1:40 "Kommentar"</code><br>
+      Serie mit <code>2x{ … }</code> · Pause <code>p:15</code> · Abgang <code>ab 1:40</code> · Tipps unter „Hilfe".
+    </div>
+    <div class="actions">
+      <button class="btn pri" id="btn-save">
+        <svg viewBox="0 0 20 20" fill="none"><path d="M4 4h9l3 3v9H4z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 4v4h5M7 16v-4h6v4" stroke="currentColor" stroke-width="1.6"/></svg>
+        Speichern
+      </button>
+      <button class="btn" id="btn-share">
+        <svg viewBox="0 0 20 20" fill="none"><circle cx="15" cy="4.5" r="2.2" stroke="currentColor" stroke-width="1.6"/><circle cx="5" cy="10" r="2.2" stroke="currentColor" stroke-width="1.6"/><circle cx="15" cy="15.5" r="2.2" stroke="currentColor" stroke-width="1.6"/><path d="M13 5.6l-6 3.3M7 11.1l6 3.3" stroke="currentColor" stroke-width="1.6"/></svg>
+        Teilen
+      </button>
+    </div>
+  </section>
+
+  <!-- ════ PREVIEW ════ -->
+  <section class="view" id="v-prev"></section>
+
+  <!-- ════ SAVED ════ -->
+  <section class="view" id="v-saved"></section>
+
+  <!-- ════ HELP ════ -->
+  <section class="view" id="v-help">
+    <div class="help-card">
+      <h3>So schreibst du ein Set</h3>
+      <p>Eine Zeile = eine Aufgabe. Reihenfolge der Angaben ist egal — nur Anzahl × Distanz steht vorn.</p>
+      <pre>4x100 kr bz5 ab 1:40 <span class="c">"negativ split"</span></pre>
+      <div class="kv">
+        <code>4x100</code><span>4 × 100 m (ohne „4x" = 1 ×)</span>
+        <code>kr</code><span>Lage (siehe unten)</span>
+        <code>bz5</code><span>Belastungszone BZ1–BZ8</span>
+        <code>ab 1:40</code><span>Abgangszeit (auch <code>@1:40</code> / <code>sz 1:40</code>)</span>
+        <code>p:15</code><span>Pause 15 s nach jeder Wdh.</span>
+        <code>sp:60</code><span>Serienpause 60 s</span>
+        <code>"…"</code><span>Kommentar in Anführungszeichen</span>
+      </div>
+    </div>
+    <div class="help-card">
+      <h3>Serien (Klammern)</h3>
+      <p>Mehrere Zeilen zu einer Runde zusammenfassen:</p>
+      <pre><span class="c">3x{</span>
+  4x50 kr bz6 ab 50
+  100 locker bz1
+<span class="c">}</span></pre>
+      <p>= 3 Runden aus 4×50 + 100 locker.</p>
+    </div>
+    <div class="help-card">
+      <h3>Lagen &amp; Formen</h3>
+      <div class="kv">
+        <code>kr / k</code><span>Kraul</span>
+        <code>ru / r</code><span>Rücken</span>
+        <code>br / b</code><span>Brust</span>
+        <code>dl / s</code><span>Delfin/Schmetterling</span>
+        <code>la / l</code><span>Lagen</span>
+        <code>be</code><span>Beine</span>
+        <code>arme / ar</code><span>Arme</span>
+        <code>tech</code><span>Technik</span>
+        <code>ek / ein</code><span>Einschwimmen</span>
+        <code>ausschwimmen</code><span>Ausschwimmen</span>
+      </div>
+      <p style="margin-top:10px">Unbekannte Wörter landen einfach als Beschreibungstext im Plan — du kannst also frei schreiben.</p>
+    </div>
+    <div class="help-card">
+      <h3>Zurück an den PC</h3>
+      <p>Über <b>Teilen</b> bekommst du den fertigen Plan als Text (zum Verschicken) und zusätzlich einen Code-Block, den die Desktop-Version später importieren kann. Alles wird außerdem lokal im Browser gespeichert.</p>
+    </div>
+  </section>
+</main>
+
+<!-- ── Sticky summary ── -->
+<div class="sumbar" id="sumbar">
+  <div class="stat"><small>Distanz</small><b id="s-dist">0 m</b></div>
+  <div class="stat"><small>Dauer</small><b id="s-dur">0:00</b></div>
+  <div class="stat"><small>TSS</small><b id="s-tss">0</b></div>
+  <div class="zbar" id="s-zbar"></div>
+</div>
+
+<div class="settings-overlay" id="settings-overlay">
+  <div class="settings-box">
+    <h2>KI-Einstellungen</h2>
+    <p>Für die KI-Umwandlung brauchst du einen Claude-API-Schlüssel. Er wird <b>nur auf diesem Gerät</b> gespeichert und direkt an Anthropic gesendet – über keinen fremden Server.</p>
+    <input id="key-input" type="password" placeholder="sk-ant-..." autocomplete="off" spellcheck="false">
+    <p class="settings-hint">Schlüssel erstellen: <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a> · Ohne Schlüssel läuft ein einfacher Offline-Modus.</p>
+    <div class="settings-actions">
+      <button class="btn" id="settings-close">Abbrechen</button>
+      <button class="btn pri" id="settings-save">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+/* ─────────── Domain tables ─────────── */
+const ZONES = {
+  bz1:{c:'#16A34A',pace:150,if:0.60}, bz2:{c:'#84CC16',pace:120,if:0.72},
+  bz3:{c:'#EAB308',pace:105,if:0.82}, bz4:{c:'#F97316',pace:95, if:0.91},
+  bz5:{c:'#EA580C',pace:85, if:0.97}, bz6:{c:'#DC2626',pace:75, if:1.02},
+  bz7:{c:'#DB2777',pace:65, if:1.07}, bz8:{c:'#9333EA',pace:55, if:1.12},
+};
+const LAGEN = {
+  kr:'Kraul', k:'Kraul', kraul:'Kraul',
+  ru:'Rücken', r:'Rücken', ruecken:'Rücken', rücken:'Rücken',
+  br:'Brust', b:'Brust', brust:'Brust',
+  dl:'Delfin', s:'Delfin', delfin:'Delfin', schmetterling:'Delfin', fly:'Delfin',
+  la:'Lagen', l:'Lagen', lagen:'Lagen',
+  be:'Beine', beine:'Beine', kick:'Beine',
+  ar:'Arme', arme:'Arme', pull:'Arme',
+  tech:'Technik', technik:'Technik',
+  ek:'Einschwimmen', ein:'Einschwimmen', einschwimmen:'Einschwimmen', warmup:'Einschwimmen',
+  aus:'Ausschwimmen', ausschwimmen:'Ausschwimmen', cooldown:'Ausschwimmen',
+  locker:'locker', beliebig:'beliebig', sprint:'Sprint',
+};
+
+/* ─────────── Parser ─────────── */
+function parseLine(raw){
+  // returns {ok, reps, dist, zone, desc, sz, p, sp, comment} or {err}
+  let line = raw.trim();
+  if(!line) return null;
+
+  // comment in quotes
+  let comment = '';
+  line = line.replace(/"([^"]*)"/, (_,c)=>{comment=c.trim(); return ' ';});
+
+  const tokens = line.split(/\s+/).filter(Boolean);
+  if(!tokens.length) return null;
+
+  let reps=1, dist=0, zone='', sz=null, p=null, sp=null;
+  const descParts=[];
+  let foundAmount=false;
+
+  for(let i=0;i<tokens.length;i++){
+    let t = tokens[i];
+    const tl = t.toLowerCase();
+
+    // amount: NxM or M (only first numeric token counts as amount)
+    let m;
+    if(!foundAmount && (m = tl.match(/^(\d+)x(\d+)$/))){
+      reps=+m[1]; dist=+m[2]; foundAmount=true; continue;
+    }
+    if(!foundAmount && (m = tl.match(/^(\d+)$/))){
+      dist=+m[1]; foundAmount=true; continue;
+    }
+    // zone
+    if(/^bz[1-8]$/.test(tl)){ zone=tl; continue; }
+    // start interval:  ab 1:40 | @1:40 | sz 1:40 | ab:1:40
+    if(tl==='ab'||tl==='sz'||tl==='@'){ const nx=tokens[i+1]; if(nx){sz=parseTime(nx); i++;} continue; }
+    if((m = tl.match(/^@(\d+:?\d*)$/))){ sz=parseTime(m[1]); continue; }
+    if((m = tl.match(/^(?:ab|sz):?(\d+:\d+|\d+)$/))){ sz=parseTime(m[1]); continue; }
+    // pause:  p:15 | p15 | p 15
+    if((m = tl.match(/^p:?(\d+)$/))){ p=+m[1]; continue; }
+    if(tl==='p'){ const nx=tokens[i+1]; if(nx&&/^\d+$/.test(nx)){p=+nx;i++;} continue; }
+    // serie pause: sp:60
+    if((m = tl.match(/^sp:?(\d+)$/))){ sp=+m[1]; continue; }
+    if(tl==='sp'){ const nx=tokens[i+1]; if(nx&&/^\d+$/.test(nx)){sp=+nx;i++;} continue; }
+    // otherwise → description (translate known lage words)
+    descParts.push(LAGEN[tl] || t);
+  }
+
+  if(!foundAmount) return {err:'Keine Distanz erkannt', raw};
+  if(dist<=0)      return {err:'Distanz muss > 0 sein', raw};
+
+  return {reps, dist, zone, sz, p, sp, comment, desc:descParts.join(' ')};
+}
+
+function parseTime(s){
+  s=(s||'').trim();
+  if(s.includes(':')){ const [a,b]=s.split(':'); return (+a||0)*60 + (+b||0); }
+  const v=+s; return v>0? v : null;
+}
+function fmtTime(sec){
+  sec=Math.round(sec||0);
+  const m=Math.floor(sec/60), s=sec%60;
+  return m+':'+String(s).padStart(2,'0');
+}
+
+function parsePlan(text){
+  const lines = text.split('\n');
+  const items=[];      // {type:'line'|'serie', ...}
+  const errors=[];
+  let serie=null;      // current open serie
+
+  lines.forEach((ln,idx)=>{
+    const t=ln.trim();
+    if(!t){ return; }
+    // serie open:  2x{  or  {
+    let m=t.match(/^(\d+)\s*x?\s*\{$/i) || t.match(/^\{$/);
+    if(m){ serie={type:'serie', reps:m[1]?+m[1]:1, lines:[]}; items.push(serie); return; }
+    if(t==='}'){ serie=null; return; }
+
+    const p=parseLine(t);
+    if(!p) return;
+    if(p.err){ errors.push({line:idx+1, msg:p.err, raw:p.raw}); return; }
+    if(serie) serie.lines.push(p);
+    else items.push(Object.assign({type:'line'}, p));
+  });
+  return {items, errors};
+}
+
+/* ─────────── Calculations ─────────── */
+function lineDist(l){ return l.reps * l.dist; }
+function lineDur(l){
+  // per-rep swim time: prefer start-interval, else pace estimate
+  const z = ZONES[l.zone] || ZONES.bz2;
+  let per;
+  if(l.sz) per = l.sz;                       // sz already includes rest
+  else per = l.dist * z.pace/100 + (l.p||0); // pace + pause
+  return l.reps * per;
+}
+function planTotals(parsed){
+  let dist=0, dur=0; const zoneM={};
+  const addLine=(l, mult)=>{
+    const d = lineDist(l)*mult;
+    dist += d;
+    dur  += lineDur(l)*mult;
+    const z = l.zone || 'bz2';
+    zoneM[z] = (zoneM[z]||0) + d;
+  };
+  parsed.items.forEach(it=>{
+    if(it.type==='serie'){
+      it.lines.forEach(l=>addLine(l, it.reps));
+      if(it.sp) dur += (it.reps-1)*(it.sp||0);
+    } else addLine(it,1);
+  });
+  // TSS (swim): (dur/3600) * IF² * 100, IF weighted by zone metres
+  let tss=0;
+  if(dist>0 && dur>0){
+    let wif=0;
+    for(const z in zoneM){ wif += (ZONES[z]?ZONES[z].if:0.75)*zoneM[z]; }
+    wif/=dist;
+    tss = (dur/3600)*(wif*wif)*100;
+  }
+  return {dist, dur, tss, zoneM};
+}
+
+/* ─────────── Rendering ─────────── */
+const $=id=>document.getElementById(id);
+
+function zChip(z){
+  if(!z) return '';
+  const c = ZONES[z]?ZONES[z].c:'#8B99AC';
+  return `<span class="pv-z" style="background:${c}">${z.toUpperCase()}</span>`;
+}
+function lineDescHtml(l){
+  let d = l.desc || '';
+  const extra=[];
+  if(l.sz) extra.push('ab '+fmtTime(l.sz));
+  if(l.p)  extra.push('P '+l.p+'s');
+  let s = d || '—';
+  if(extra.length) s += ' · '+extra.join(' · ');
+  if(l.comment) s += `<span class="cmt">${esc(l.comment)}</span>`;
+  return s;
+}
+function esc(s){return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+
+function renderPreview(){
+  const text=$('src').value;
+  const parsed=parsePlan(text);
+  const tot=planTotals(parsed);
+  const name=$('f-name').value||'Training';
+  const date=$('f-date').value;
+  const pool=$('f-pool').value;
+
+  let html='';
+  if(parsed.errors.length){
+    html += '<div class="pv-err"><b>Konnte nicht gelesen werden:</b><br>'+
+      parsed.errors.map(e=>`Zeile ${e.line}: ${e.msg} → <b>${esc(e.raw)}</b>`).join('<br>')+'</div>';
+  }
+
+  const hasContent = parsed.items.length>0;
+  if(!hasContent){
+    html += '<div class="pv-card"><div class="pv-empty">Noch nichts geschrieben.<br>Wechsle zu „Schreiben".</div></div>';
+    $('v-prev').innerHTML=html; return;
+  }
+
+  // card
+  const dStr = date ? new Date(date+'T00:00:00').toLocaleDateString('de-DE',{weekday:'short',day:'numeric',month:'long'}) : '';
+  let lines='';
+  parsed.items.forEach(it=>{
+    if(it.type==='serie'){
+      lines += `<div class="pv-serie"><div class="sh"><span class="reps">${it.reps}× Serie</span>${it.sp?'<span style="color:var(--ink-3);font-weight:500">Serienpause '+it.sp+'s</span>':''}</div>`;
+      it.lines.forEach(l=>{
+        lines += `<div class="pv-line in-serie"><span class="pv-amt">${l.reps>1?l.reps+'×':''}${l.dist}</span>`+
+          `<span class="pv-desc">${lineDescHtml(l)}</span>${zChip(l.zone)}</div>`;
+      });
+      lines += `</div>`;
+    } else {
+      lines += `<div class="pv-line"><span class="pv-amt">${it.reps>1?it.reps+'×':''}${it.dist}</span>`+
+        `<span class="pv-desc">${lineDescHtml(it)}</span>${zChip(it.zone)}`+
+        `<span class="pv-time">${fmtTime(planTotalUpto(parsed,it))}</span></div>`;
+    }
+  });
+  html += `<div class="pv-card"><div class="pv-head"><h2>${esc(name)}</h2>`+
+    `<div class="meta">${dStr?dStr+' · ':''}${pool} · ${fmtM(tot.dist)} · ${fmtTime(tot.dur)} h</div></div>${lines}</div>`;
+
+  // zone stats
+  const zEntries=Object.entries(tot.zoneM).sort((a,b)=>b[1]-a[1]);
+  if(zEntries.length){
+    let zr='';
+    zEntries.forEach(([z,m])=>{
+      const c=ZONES[z]?ZONES[z].c:'#8B99AC';
+      const pct=tot.dist?Math.round(m/tot.dist*100):0;
+      zr+=`<div class="zrow"><span class="dot" style="background:${c}"></span>`+
+        `<span class="lbl">${z.toUpperCase()}</span><span class="val">${fmtM(m)} · ${pct}%</span></div>`;
+    });
+    html += `<div class="pv-stats"><h3>Zonenverteilung</h3>${zr}</div>`;
+  }
+  $('v-prev').innerHTML=html;
+}
+// cumulative time up to (and including) a standalone item
+function planTotalUpto(parsed,target){
+  let dur=0;
+  for(const it of parsed.items){
+    if(it.type==='serie'){ it.lines.forEach(l=>dur+=lineDur(l)*it.reps); if(it.sp)dur+=(it.reps-1)*it.sp; }
+    else { dur+=lineDur(it); if(it===target) return dur; }
+  }
+  return dur;
+}
+
+function fmtM(m){ return m>=1000 ? (m/1000).toFixed(1).replace('.',',')+' km' : m+' m'; }
+
+function updateSummary(){
+  const parsed=parsePlan($('src').value);
+  const tot=planTotals(parsed);
+  $('s-dist').textContent=fmtM(tot.dist);
+  $('s-dur').textContent=fmtTime(tot.dur);
+  $('s-tss').textContent=Math.round(tot.tss);
+  const zEntries=Object.entries(tot.zoneM).sort((a,b)=>b[1]-a[1]);
+  $('s-zbar').innerHTML = tot.dist? zEntries.map(([z,m])=>{
+    const c=ZONES[z]?ZONES[z].c:'#8B99AC';
+    return `<i style="flex:${m};background:${c}"></i>`;
+  }).join('') : '';
+}
+
+/* ─────────── Export / share ─────────── */
+function planToText(){
+  const parsed=parsePlan($('src').value);
+  const tot=planTotals(parsed);
+  const name=$('f-name').value||'Training';
+  const date=$('f-date').value;
+  const lines=[];
+  lines.push(name.toUpperCase());
+  if(date) lines.push(new Date(date+'T00:00:00').toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long',year:'numeric'}));
+  lines.push(fmtM(tot.dist)+'  ·  '+fmtTime(tot.dur)+' h  ·  '+Math.round(tot.tss)+' TSS');
+  lines.push('─'.repeat(28));
+  const fmtL=(l,ind)=>{
+    let s=(ind?'   ':'')+(l.reps>1?l.reps+'×':'')+l.dist+'m';
+    if(l.desc) s+=' '+l.desc;
+    if(l.zone) s+=' ['+l.zone.toUpperCase()+']';
+    if(l.sz) s+=' ab '+fmtTime(l.sz);
+    if(l.p)  s+=' P'+l.p;
+    if(l.comment) s+='  — '+l.comment;
+    return s;
+  };
+  parsed.items.forEach(it=>{
+    if(it.type==='serie'){
+      lines.push(it.reps+'× SERIE'+(it.sp?'  (SP '+it.sp+'s)':''));
+      it.lines.forEach(l=>lines.push(fmtL(l,true)));
+    } else lines.push(fmtL(it,false));
+  });
+  return lines.join('\n');
+}
+// raw payload the desktop app can re-import
+function planPayload(){
+  return {
+    v:1, kind:'swimtrain-plan',
+    name:$('f-name').value||'Training',
+    date:$('f-date').value||null,
+    pool:$('f-pool').value,
+    source:$('src').value,
+  };
+}
+
+async function sharePlan(){
+  const txt = planToText() +
+    '\n\n— — — — — —\nImport-Code (SwimTrain Pro Desktop):\nSTP'+
+    btoa(unescape(encodeURIComponent(JSON.stringify(planPayload()))))+'STP';
+  if(navigator.share){
+    try{ await navigator.share({title:$('f-name').value||'Trainingsplan', text:txt}); return; }catch(e){ if(e.name==='AbortError')return; }
+  }
+  try{ await navigator.clipboard.writeText(txt); toast('In Zwischenablage kopiert'); }
+  catch(e){ prompt('Kopieren:', txt); }
+}
+
+/* ─────────── Storage ─────────── */
+const KEY='stp_mobile_plans';
+function loadAll(){ try{return JSON.parse(localStorage.getItem(KEY))||[];}catch(e){return [];} }
+function saveAll(a){ localStorage.setItem(KEY, JSON.stringify(a)); }
+let currentId=null;
+
+function savePlan(){
+  const all=loadAll();
+  const rec={
+    id: currentId || ('p'+Date.now()),
+    name:$('f-name').value||'Training',
+    date:$('f-date').value||null,
+    pool:$('f-pool').value,
+    source:$('src').value,
+    updated:Date.now(),
+  };
+  const i=all.findIndex(p=>p.id===rec.id);
+  if(i>=0) all[i]=rec; else all.unshift(rec);
+  saveAll(all); currentId=rec.id;
+  toast('Gespeichert');
+  renderSaved();
+}
+function renderSaved(){
+  const all=loadAll().sort((a,b)=>b.updated-a.updated);
+  if(!all.length){ $('v-saved').innerHTML='<div class="saved-empty">Noch keine gespeicherten Pläne.</div>'; return; }
+  $('v-saved').innerHTML = all.map(p=>{
+    const tot=planTotals(parsePlan(p.source||''));
+    const d=p.date?new Date(p.date+'T00:00:00').toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit'}):'';
+    return `<div class="saved-item" data-id="${p.id}">
+      <div class="info" data-open="${p.id}"><b>${esc(p.name)}</b>
+        <small>${d?d+' · ':''}${fmtM(tot.dist)} · ${fmtTime(tot.dur)} h</small></div>
+      <button class="del" data-del="${p.id}">×</button></div>`;
+  }).join('');
+}
+function openPlan(id){
+  const p=loadAll().find(x=>x.id===id); if(!p) return;
+  currentId=p.id;
+  $('f-name').value=p.name||''; $('f-date').value=p.date||'';
+  $('f-pool').value=p.pool||'25m'; $('src').value=p.source||'';
+  refresh(); switchTab('edit'); toast('Geladen');
+}
+function delPlan(id){
+  const all=loadAll().filter(p=>p.id!==id); saveAll(all);
+  if(currentId===id) currentId=null;
+  renderSaved();
+}
+
+/* ─────────── UI wiring ─────────── */
+function switchTab(v){
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  document.querySelectorAll('.view').forEach(s=>s.classList.toggle('on', s.id==='v-'+v));
+  if(v==='prev') renderPreview();
+  if(v==='saved') renderSaved();
+  // hide summary bar on saved/help
+  $('sumbar').style.display = (v==='edit'||v==='prev')?'flex':'none';
+}
+function refresh(){ updateSummary(); if($('v-prev').classList.contains('on')) renderPreview(); }
+
+let toastT;
+function toast(msg){
+  const el=$('toast'); el.textContent=msg; el.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),1800);
+}
+
+function newPlan(){
+  currentId=null;
+  $('f-name').value='Neues Training';
+  $('f-date').value=new Date().toISOString().slice(0,10);
+  $('src').value=''; refresh(); switchTab('edit');
+}
+
+document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.v)));
+$('src').addEventListener('input', refresh);
+$('f-name').addEventListener('input', ()=>{ if($('v-prev').classList.contains('on'))renderPreview(); });
+$('btn-save').addEventListener('click', savePlan);
+$('btn-share').addEventListener('click', sharePlan);
+$('btn-new').addEventListener('click', newPlan);
+$('v-saved').addEventListener('click', e=>{
+  const del=e.target.closest('[data-del]'); if(del){ delPlan(del.dataset.del); return; }
+  const op=e.target.closest('[data-open]'); if(op){ openPlan(op.dataset.open); }
+});
+
+/* ─────────── KI-Assistent + Diktat ─────────── */
+const AI_SYSTEM =
+"Du wandelst Schwimmtrainings-Beschreibungen in ein kompaktes Textformat (DSL) um.\n\n" +
+"REGELN:\n" +
+"- Gib AUSSCHLIESSLICH die formatierten Trainingszeilen aus. Keine Erklärungen, keine Einleitung, kein Markdown, keine Code-Fences.\n" +
+"- Eine Zeile pro Aufgabe. Format: [Anzahl]x[Distanz] [lage] [bzX] [ab M:SS] [p:Sek] [\"Kommentar\"]\n" +
+"- Anzahl x Distanz: z.B. 8x50; ohne Wiederholung nur die Distanz, z.B. 400.\n" +
+"- Lagen-Kürzel: kr=Kraul, ru=Rücken, br=Brust, dl=Delfin, la=Lagen, be=Beine, ar=Arme, tech=Technik, ek=Einschwimmen, aus=Ausschwimmen. Unbekannte Begriffe als Klartext lassen.\n" +
+"- Intensität als bz1..bz8 (bz1=locker/Kompensation bis bz8=Sprint). Begriffe sinnvoll zuordnen: GA1≈bz2, GA2≈bz3, Schwelle≈bz4, VO2max≈bz5, Sprintausdauer≈bz7, Sprint≈bz8.\n" +
+"- Abgangszeit: 'ab 1:40'. Pause nach jeder Wdh: 'p:15'. Serienpause: 'sp:60'.\n" +
+"- Serien/Runden:\n  Nx{\n    ...zeilen...\n  }\n" +
+"- Fehlt eine Angabe, lass sie weg statt zu raten.\n\n" +
+"BEISPIEL-EINGABE: 400 locker einschwimmen, dann 4 mal 100 Lagen mit 15 Sekunden Pause, danach zweimal: 4x100 Kraul auf 1:40 negativ split und 200 locker, zum Schluss 8 mal 25 Sprint Pause 30\n" +
+"BEISPIEL-AUSGABE:\n400 ek bz1\n4x100 la bz2 p:15\n2x{\n  4x100 kr bz5 ab 1:40 \"negativ split\"\n  200 locker bz1\n}\n8x25 sprint bz8 p:30";
+
+const aiInput = $('ai-input');
+const aiStatusEl = $('ai-status');
+function aiStatus(msg, busy){ aiStatusEl.textContent = msg || ''; aiStatusEl.className = 'ai-status' + (busy ? ' busy' : ''); }
+
+// Spracherkennung (Diktat)
+let recog = null, recording = false, aiBaseText = '';
+function setupMic(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const micBtn = $('ai-mic');
+  if(!SR){ micBtn.style.display = 'none'; return; }
+  recog = new SR();
+  recog.lang = 'de-DE'; recog.continuous = true; recog.interimResults = true;
+  recog.onresult = (e)=>{
+    let interim = '', final = '';
+    for(let i=e.resultIndex; i<e.results.length; i++){
+      const t = e.results[i][0].transcript;
+      if(e.results[i].isFinal) final += t; else interim += t;
+    }
+    if(final) aiBaseText = (aiBaseText + ' ' + final).trim();
+    aiInput.value = (aiBaseText + ' ' + interim).trim();
+  };
+  recog.onend = ()=>{ if(recording){ try{ recog.start(); }catch(_){} } };
+  recog.onerror = (e)=>{ if(e.error === 'not-allowed'){ aiStatus('Mikrofon-Zugriff verweigert.'); stopMic(); } };
+  micBtn.addEventListener('click', ()=> recording ? stopMic() : startMic());
+}
+function startMic(){
+  aiBaseText = aiInput.value.trim(); recording = true;
+  try{ recog.start(); }catch(_){}
+  $('ai-mic').classList.add('on'); $('ai-mic-label').textContent = 'Stopp';
+  aiStatus('Höre zu … sprich jetzt.');
+}
+function stopMic(){
+  recording = false;
+  try{ recog.stop(); }catch(_){}
+  $('ai-mic').classList.remove('on'); $('ai-mic-label').textContent = 'Diktieren';
+  aiStatus('');
+}
+
+function stripFences(s){ return (s||'').replace(/^```[a-z]*\s*/i, '').replace(/```\s*$/, '').trim(); }
+
+async function aiConvert(){
+  const text = aiInput.value.trim();
+  if(!text){ aiStatus('Bitte zuerst etwas eingeben oder diktieren.'); return; }
+  const key = localStorage.getItem('stp_anthropic_key') || '';
+  if(!key){
+    $('src').value = offlineNormalize(text); refresh();
+    aiStatus('Ohne KI-Schlüssel umgewandelt (einfacher Modus). Für beste Ergebnisse Schlüssel hinterlegen (Zahnrad oben).');
+    return;
+  }
+  aiStatus('KI wandelt um …', true);
+  try{
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-4-8',
+        max_tokens: 2000,
+        system: AI_SYSTEM,
+        messages: [{ role: 'user', content: text }]
+      })
+    });
+    if(res.status === 401){ aiStatus('KI-Schlüssel ungültig. Bitte über das Zahnrad prüfen.'); return; }
+    if(!res.ok){ aiStatus('KI-Fehler (' + res.status + '). Bitte erneut versuchen.'); return; }
+    const data = await res.json();
+    const out = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+    const dsl = stripFences(out);
+    if(!dsl){ aiStatus('Keine Ausgabe erhalten.'); return; }
+    $('src').value = dsl; refresh();
+    aiStatus('Fertig! Prüfe den Plan unten und in der Vorschau.');
+  }catch(e){ aiStatus('Netzwerkfehler – bist du online?'); }
+}
+
+// Einfacher Offline-Normalisierer (ohne KI)
+const NUMWORDS = {eins:1,ein:1,eine:1,zwei:2,drei:3,vier:4,'fünf':5,fuenf:5,sechs:6,sieben:7,acht:8,neun:9,zehn:10,elf:11,'zwölf':12,zwoelf:12};
+function offlineNormalize(text){
+  const parts = text.replace(/\n/g, ', ').split(/[,;]|\bdann\b|\bdanach\b|\bzum schluss\b|\banschließend\b|\banschliessend\b/i);
+  const out = [];
+  for(let p of parts){
+    let s = ' ' + p.toLowerCase().trim() + ' ';
+    if(!s.trim()) continue;
+    for(const w in NUMWORDS){ s = s.replace(new RegExp('\\b' + w + '\\b', 'g'), NUMWORDS[w]); }
+    s = s.replace(/(\d+)\s*(?:mal|x|×)\s*(\d+)/g, '$1x$2');
+    s = s.replace(/\b(?:auf|abgang|startzeit)\s*(\d+:\d+)/g, 'ab $1');
+    s = s.replace(/\b(?:pause)\s*(\d+)\b/g, 'p:$1');
+    s = s.trim();
+    if(s) out.push(s);
+  }
+  return out.join('\n');
+}
+
+// Einstellungen (API-Schlüssel)
+function openSettings(){ $('key-input').value = localStorage.getItem('stp_anthropic_key') || ''; $('settings-overlay').classList.add('show'); }
+function closeSettings(){ $('settings-overlay').classList.remove('show'); }
+function saveKey(){
+  const k = $('key-input').value.trim();
+  if(k) localStorage.setItem('stp_anthropic_key', k); else localStorage.removeItem('stp_anthropic_key');
+  closeSettings();
+  aiStatus(k ? 'KI-Schlüssel gespeichert.' : 'KI-Schlüssel entfernt.');
+}
+
+$('ai-convert').addEventListener('click', aiConvert);
+$('ai-settings-btn').addEventListener('click', openSettings);
+$('settings-close').addEventListener('click', closeSettings);
+$('settings-save').addEventListener('click', saveKey);
+$('settings-overlay').addEventListener('click', (e)=>{ if(e.target.id === 'settings-overlay') closeSettings(); });
+setupMic();
+
+// init
+$('f-date').value=new Date().toISOString().slice(0,10);
+refresh();
+</script>
+</body>
+</html>
